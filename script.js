@@ -68,15 +68,17 @@ const MOCK_RESTAURANTS = [
     },
 ];
 
-// Unique filter tags for the filter bar (excluding duplicates and sorting for consistency)
+// Unique filter tags for the filter bar
 const ALL_TAGS = Array.from(new Set(MOCK_RESTAURANTS.flatMap(r => r.tags))).sort();
 
 // --- DOM Selectors ---
 const restaurantGrid = document.getElementById('restaurant-grid');
 const loadingIndicator = document.getElementById('loading-indicator');
 const filterContainer = document.getElementById('category-filters');
+const searchInput = document.querySelector('input[type="text"][placeholder="Search local restaurants..."]');
 
 let activeTag = 'Spicy'; // Default active tag
+let currentSearchTerm = ''; // Track current search term
 
 // --- Core Functions ---
 
@@ -97,10 +99,9 @@ function updateFavoritesCount() {
 
 /**
  * Toggle favorite status for a restaurant
- * @param {number} restaurantId - The restaurant ID to toggle
  */
 function toggleFavorite(restaurantId, event) {
-    // Prevent card click when clicking heart
+    event.preventDefault();
     event.stopPropagation();
     
     const index = favorites.indexOf(restaurantId);
@@ -110,17 +111,13 @@ function toggleFavorite(restaurantId, event) {
         favorites.push(restaurantId);
     }
     
-    // Save to localStorage
     localStorage.setItem('favorites', JSON.stringify(favorites));
-    
-    // Re-render to update heart icons
-    renderRestaurants(activeTag);
+    updateFavoritesCount();
+    renderRestaurants(activeTag, currentSearchTerm);
 }
 
 /**
  * Check if a restaurant is favorited
- * @param {number} restaurantId - The restaurant ID to check
- * @returns {boolean}
  */
 function isFavorite(restaurantId) {
     return favorites.includes(restaurantId);
@@ -128,8 +125,6 @@ function isFavorite(restaurantId) {
 
 /**
  * Generates the HTML for a single restaurant card.
- * @param {object} restaurant - The restaurant data object.
- * @returns {string} The HTML string for the card.
  */
 function createRestaurantCard(restaurant) {
     const starIcon = `<svg class="w-4 h-4 text-loyalty-gold fill-current flex-shrink-0" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
@@ -147,9 +142,8 @@ function createRestaurantCard(restaurant) {
         : `<span class="status-badge closed">
                 <img src="src/asset/images/clock.png" alt="Open" class="clock-icon w-3 h-3">
                 Closed
-           </span>`
-           ;
-    // Tags for the bottom section (limited to 3 for clean layout)
+           </span>`;
+
     const tagElements = restaurant.tags.slice(0, 3).map(tag => 
         `<span class="bg-tag-bg text-gray-700 text-xs px-2 py-1 rounded-full whitespace-nowrap transition duration-200 hover:bg-gray-200">${tag}</span>`
     ).join('');
@@ -180,7 +174,6 @@ function createRestaurantCard(restaurant) {
                     <p class="text-xs text-foodie-brand font-semibold mb-3">${restaurant.cuisine}</p>
                 </div>
 
-                <!-- Price & Tags Section -->
                 <div class="flex justify-between items-end border-t pt-3">
                     <span class="text-lg font-extrabold text-gray-700">${restaurant.price}</span>
                     <div class="flex flex-wrap gap-2 justify-end">
@@ -194,13 +187,11 @@ function createRestaurantCard(restaurant) {
 
 /**
  * Handles the click event for a filter tag.
- * @param {string} tag - The tag to filter by.
  */
 function handleFilterClick(tag) {
     activeTag = tag;
-    renderRestaurants(activeTag);
+    renderRestaurants(activeTag, currentSearchTerm);
     
-    // Update button styles
     document.querySelectorAll('.filter-tag').forEach(btn => {
         btn.classList.remove('active-filter');
         if (btn.getAttribute('data-tag') === tag) {
@@ -210,17 +201,15 @@ function handleFilterClick(tag) {
 }
 
 /**
- * Renders the category filter buttons dynamically and attaches listeners.
+ * Renders the category filter buttons dynamically
  */
 function renderFilters() {
-    // Include 'All' as the first option, then the unique tags
     const tagsToDisplay = ['All', ...ALL_TAGS];
 
     filterContainer.innerHTML = tagsToDisplay.map(tag => `
         <button data-tag="${tag}" class="filter-tag bg-tag-bg text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition duration-200 hover:bg-gray-200">${tag}</button>
     `).join('');
 
-    // Attach click listeners
     document.querySelectorAll('.filter-tag').forEach(button => {
         button.addEventListener('click', (e) => {
             const tag = e.currentTarget.getAttribute('data-tag');
@@ -230,23 +219,39 @@ function renderFilters() {
 }
 
 /**
- * Renders the list of restaurant cards to the DOM.
- * @param {string} filterTag - The tag to filter by ('All' or a specific tag).
+ * Filters restaurants based on search term
  */
-function renderRestaurants(filterTag) {
-    loadingIndicator.style.display = 'block'; 
-    restaurantGrid.innerHTML = ''; // Clear existing content
+function filterBySearch(restaurants, searchTerm) {
+    if (!searchTerm) return restaurants;
     
-    // Simulate a brief network delay for realism
+    const term = searchTerm.toLowerCase().trim();
+    
+    return restaurants.filter(restaurant => {
+        if (restaurant.name.toLowerCase().includes(term)) return true;
+        if (restaurant.cuisine.toLowerCase().includes(term)) return true;
+        if (restaurant.address.toLowerCase().includes(term)) return true;
+        if (restaurant.tags.some(tag => tag.toLowerCase().includes(term))) return true;
+        return false;
+    });
+}
+
+/**
+ * Renders the list of restaurant cards to the DOM.
+ */
+function renderRestaurants(filterTag, searchTerm = '') {
+    loadingIndicator.style.display = 'block'; 
+    restaurantGrid.innerHTML = '';
+    
     setTimeout(() => {
-        const filteredRestaurants = filterTag === 'All'
+        let filteredRestaurants = filterTag === 'All'
             ? MOCK_RESTAURANTS
             : MOCK_RESTAURANTS.filter(r => r.tags.includes(filterTag));
+        
+        filteredRestaurants = filterBySearch(filteredRestaurants, searchTerm);
 
         if (filteredRestaurants.length > 0) {
             restaurantGrid.innerHTML = filteredRestaurants.map(createRestaurantCard).join('');
             
-            // Add click event listeners to favorite buttons
             document.querySelectorAll('.favorite-btn').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     const restaurantId = parseInt(this.getAttribute('data-id'));
@@ -254,7 +259,6 @@ function renderRestaurants(filterTag) {
                 });
             });
             
-            // Add click event listeners to restaurant cards
             document.querySelectorAll('.restaurant-card').forEach(card => {
                 card.addEventListener('click', function() {
                     const restaurantId = this.getAttribute('data-id');
@@ -262,7 +266,10 @@ function renderRestaurants(filterTag) {
                 });
             });
         } else {
-            restaurantGrid.innerHTML = '<div class="col-span-full text-center p-8 text-gray-500 text-lg">No restaurants matching the tag "'+ filterTag +'" were found.</div>';
+            const message = searchTerm 
+                ? `No restaurants found matching "${searchTerm}"` 
+                : `No restaurants matching the tag "${filterTag}" were found.`;
+            restaurantGrid.innerHTML = `<div class="col-span-full text-center p-8 text-gray-500 text-lg">${message}</div>`;
         }
 
         loadingIndicator.style.display = 'none';
@@ -270,13 +277,25 @@ function renderRestaurants(filterTag) {
 }
 
 /**
+ * Initialize search functionality
+ */
+function initializeSearch() {
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            currentSearchTerm = e.target.value;
+            renderRestaurants(activeTag, currentSearchTerm);
+        });
+    }
+}
+
+/**
  * Initializes the application.
  */
 function initializeApp() {
+    updateFavoritesCount();
     renderFilters();
-    // Initial Render: Filter by the default active tag ('Spicy' to match the original image)
+    initializeSearch();
     handleFilterClick(activeTag);
 }
 
-// Run the initialization function when the window loads
 window.onload = initializeApp;
