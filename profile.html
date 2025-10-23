@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Foodie Chain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-white': '#FFFFFF', 
+                        'foodie-brand': '#000000ff',
+                        'accent-orange': '#FF7F50',
+                        'loyalty-gold': '#FACC15',
+                        'profile': '#FAFAFA',
+                        'card-bg': '#FFFFFF',
+                        'tag-bg': '#F3F4F6',
+                        'open-green': '#22C55E',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+
+    <!-- Top Navigation/Header Bar -->
+    <nav class="bg-primary-white shadow-md border-b border-gray-100 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto flex items-center justify-between p-4 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-2">
+                <img src="src/asset/logo.svg" alt="Foodie Chain Logo" class="w-10 h-10">
+                <span class="text-xl font-extrabold text-foodie-brand hidden sm:block">Foodie Chain</span>
+            </div>
+
+            <div class="flex flex-1 max-w-lg mx-4 space-x-4">
+                <div class="flex items-center text-sm text-gray-600 cursor-pointer hover:text-foodie-brand transition">
+                    <span class="font-medium truncate hidden md:block">Baliwag, Bulacan, Philippines</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button onclick="window.location.href='favorites.html'" class="relative flex items-center gap-1 bg-accent-orange text-white px-3 py-1.5 rounded-xl text-sm font-medium hover:bg-accent-orange/90 transition shadow-md">
+                    <span class="hidden sm:inline text-foodie-brand">My Favorites</span>
+                    <span id="fav-count" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">0</span>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-profile flex items-center justify-center text-sm border font-semibold border-gray-200 text-white">
+                    <img src="src/asset/images/profile.png" alt="User" class="w-5 h-5">
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Profile Card -->
+            <aside class="bg-card-bg rounded-xl p-6 figma-shadow">
+                <div class="flex items-center gap-4 mb-4">
+                    <img src="src/asset/images/profile.png" alt="Profile" class="w-16 h-16 rounded-full">
+                    <div>
+                        <h2 id="profile-name" class="text-xl font-bold text-gray-900">Food Explorer</h2>
+                        <p id="member-since" class="text-sm text-gray-500">Member since 2024</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                        <p id="total-visits" class="text-2xl font-extrabold text-gray-800">0</p>
+                        <p class="text-sm text-gray-500">Total visits</p>
+                    </div>
+                    <div>
+                        <p id="places-visited" class="text-2xl font-extrabold text-gray-800">0</p>
+                        <p class="text-sm text-gray-500">Places visited</p>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <p class="text-sm text-gray-500 mb-2">Loyalty points</p>
+                    <p id="loyalty-points" class="text-3xl font-extrabold text-foodie-brand">0</p>
+                </div>
+            </aside>
+
+            <!-- Activity + Loyalty -->
+            <section class="md:col-span-2 space-y-6">
+                <div class="bg-card-bg rounded-xl p-6 figma-shadow">
+                    <h3 class="text-lg font-bold mb-3">Recent Activities</h3>
+                    <div id="recent-activities" class="space-y-3">
+                        <!-- Activities inserted by JS -->
+                    </div>
+                </div>
+
+                <div class="bg-card-bg rounded-xl p-6 figma-shadow">
+                    <h3 class="text-lg font-bold mb-3">Loyalty Progress</h3>
+                    <div id="loyalty-progress" class="space-y-4">
+                        <!-- Loyalty progress inserted by JS -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="profile.js"></script>
+</body>
+</html>
